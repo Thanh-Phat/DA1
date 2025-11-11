@@ -1,0 +1,6 @@
+@HTGMTMQ_QR.BackendServer_HostAddress = http://localhost:5198
+
+GET {{HTGMTMQ_QR.BackendServer_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,10 @@
+# Visual Studio cache and temporary files
+.vs/
+*.user
+*.suo
+*.dbmdl
+*.bak
+*.obj
+*.bin
+bin/
+obj/
