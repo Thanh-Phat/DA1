@@ -4,29 +4,26 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HTGMTMQ_QR.BackendServer.Data.Entities
 {
-    public class SanPham
+    [Table("SanPham")]
+    public class SanPham : IDateTracking
     {
-        [Table("SanPham")]
-        public class SanPham : IDateTracking
-        {
-            [Key]
-            public int MaSP { get; set; }
+        [Key]
+        public int MaSP { get; set; }
 
-            [Required, StringLength(100)]
-            public string TenSP { get; set; }
+        [Required, StringLength(100)]
+        public string TenSP { get; set; }
 
-            [Required]
-            public decimal DonGia { get; set; }
+        [Required]
+        public decimal DonGia { get; set; }
 
-            [StringLength(50)]
-            public string LoaiSP { get; set; }
+        [StringLength(50)]
+        public string LoaiSP { get; set; }
 
-            [Required, StringLength(20)]
-            public string TrangThai { get; set; } = "Đang bán";
+        [Required, StringLength(20)]
+        public string TrangThai { get; set; } = "Đang bán";
 
-            public ICollection<ChiTietHoaDon> ChiTietHoaDons { get; set; }
-            public DateTime CreateDate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public DateTime LastModifiedDate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        }
+        public ICollection<ChiTietHoaDon> ChiTietHoaDons { get; set; }
+        public DateTime CreateDate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public DateTime LastModifiedDate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     }
 }

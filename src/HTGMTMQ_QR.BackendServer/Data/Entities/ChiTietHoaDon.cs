@@ -3,31 +3,28 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HTGMTMQ_QR.BackendServer.Data.Entities
 {
+    [Table("ChiTietHoaDon")]
     public class ChiTietHoaDon
     {
-        [Table("ChiTietHoaDon")]
-        public class ChiTietHoaDon
-        {
-            [Key]
-            public int MaCTHD { get; set; }
+        [Key]
+        public int MaCTHD { get; set; }
 
-            [ForeignKey("HoaDon")]
-            public int MaHD { get; set; }
+        [ForeignKey("HoaDon")]
+        public int MaHD { get; set; }
 
-            [ForeignKey("SanPham")]
-            public int MaSP { get; set; }
+        [ForeignKey("SanPham")]
+        public int MaSP { get; set; }
 
-            public int SoLuong { get; set; }
+        public int SoLuong { get; set; }
 
-            public decimal DonGia { get; set; }
+        public decimal DonGia { get; set; }
 
-            public decimal ThanhTien { get; set; }
+        public decimal ThanhTien { get; set; }
 
-            [Required, StringLength(20)]
-            public string TrangThaiMon { get; set; }
+        [Required, StringLength(20)]
+        public string TrangThaiMon { get; set; }
 
-            public HoaDon HoaDon { get; set; }
-            public SanPham SanPham { get; set; }
-        }
+        public HoaDon HoaDon { get; set; }
+        public SanPham SanPham { get; set; }
     }
 }

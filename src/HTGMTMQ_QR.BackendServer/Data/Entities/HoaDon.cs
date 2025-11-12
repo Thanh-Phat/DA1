@@ -4,34 +4,32 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HTGMTMQ_QR.BackendServer.Data.Entities
 {
-    public class HoaDon
+    [Table("HoaDon")]
+    public class HoaDon : IDateTracking
     {
-        [Table("HoaDon")]
-        public class HoaDon : IDateTracking
-        {
-            [Key]
-            public int MaHD { get; set; }
+        [Key]
+        public int MaHD { get; set; }
 
-            [ForeignKey("Ban")]
-            public int MaBan { get; set; }
+        [ForeignKey("Ban")]
+        public int MaBan { get; set; }
 
-            [ForeignKey("NguoiDung")]
-            public int MaND { get; set; }
+        [ForeignKey("NguoiDung")]
+        public int MaND { get; set; }
 
-            public DateTime NgayTao { get; set; }
+        public DateTime NgayTao { get; set; }
 
-            public decimal TongTien { get; set; }
+        public decimal TongTien { get; set; }
 
-            [Required, StringLength(20)]
-            public string TrangThai { get; set; } = "Chưa thanh toán";
+        [Required, StringLength(20)]
+        public string TrangThai { get; set; } = "Chưa thanh toán";
 
-            public Ban Ban { get; set; }
-            public NguoiDung NguoiDung { get; set; }
-            public ThanhToan ThanhToan { get; set; }
+        public Ban Ban { get; set; }
+        public NguoiDung NguoiDung { get; set; }
+        public ThanhToan ThanhToan { get; set; }
 
-            public ICollection<ChiTietHoaDon> ChiTietHoaDons { get; set; }
-            public DateTime CreateDate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public DateTime LastModifiedDate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        }
+        public ICollection<ChiTietHoaDon> ChiTietHoaDons { get; set; }
+        public DateTime CreateDate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public DateTime LastModifiedDate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     }
 }
+
