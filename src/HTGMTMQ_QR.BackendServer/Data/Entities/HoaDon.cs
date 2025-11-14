@@ -29,7 +29,7 @@ namespace HTGMTMQ_QR.BackendServer.Data.Entities
 
         public ICollection<ChiTietHoaDon> ChiTietHoaDons { get; set; }
         public DateTime CreateDate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public DateTime LastModifiedDate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public DateTime? LastModifiedDate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     }
 }
 

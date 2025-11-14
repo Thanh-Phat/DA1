@@ -27,7 +27,7 @@ namespace HTGMTMQ_QR.BackendServer.Data.Entities
         public DateTime NgayCapNhatMK { get; set; }
 
         public ICollection<HoaDon> HoaDons { get; set; }
-        public DateTime CreateDate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public DateTime LastModifiedDate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public DateTime CreateDate { get; set; } = DateTime.Now;
+        public DateTime? LastModifiedDate { get; set; }
     }
 }
