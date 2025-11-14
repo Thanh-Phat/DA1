@@ -23,7 +23,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         //URL POST: http://locahost:5001/api/nguoidung
         //Thêm người dùng
         [HttpPost]
-        public async Task<ActionResult<NguoiDungCreateVm>>PostNguoiDung(NguoiDungCreateVm model)
+        public async Task<ActionResult<NguoiDungViewModels>>PostNguoiDung(NguoiDungCreateVm model)
         {
             var nd = new NguoiDung
             {
@@ -46,7 +46,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         // URL GET: http://localhost:5001/api/nguoidung/?filter={searchKeyword}&pageIndex=1&pageSize=10
         // Lấy danh sách (có filter + paging)
         [HttpGet]
-        public async Task<IActionResult> GetAllNguoiDung(string? filter= null, int pageIndex= 1, int pageSize = 1)
+        public async Task<IActionResult> GetAllNguoiDung(string? filter= null, int pageIndex= 1, int pageSize = 10)
         {
             var query = _context.NguoiDungs.AsQueryable();
 
