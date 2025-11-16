@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HTGMTMQ_QR.ViewModels.Systems.Chitiethoadon
 {
-    internal class ChiTietHoaDonViewModel
+    public class ChiTietHoaDonViewModels
     {
         public int MaCTHD { get; set; }
         public int MaHD { get; set; }

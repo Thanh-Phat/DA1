@@ -7,9 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Systems\HoaDon\" />
-    <Folder Include="Systems\ThanhToan\" />
-    <Folder Include="Systems\SanPham\" />
     <Folder Include="Systems\QRCode\" />
   </ItemGroup>
 
