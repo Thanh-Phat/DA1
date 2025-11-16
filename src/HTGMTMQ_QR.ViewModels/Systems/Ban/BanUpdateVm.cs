@@ -9,7 +9,7 @@ namespace HTGMTMQ_QR.ViewModels.Systems.Ban
     public class BanUpdateVm
     {
         public int MaBan { get; set; }
-        public int Soban { get; set; }
+        public int SoBan { get; set; }
         public string TrangThai { get; set; }   
     }
 }

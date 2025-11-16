@@ -36,7 +36,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
             var items = await query
                 .OrderBy(b => b.MaBan)
-                .Skip((pageSize - 1) * pageSize)
+                .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .Select(b => new BanViewModels
                 {
@@ -83,9 +83,10 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
                 SoBan = model.SoBan,
                 TrangThai = "Trống"
             };
+
             _context.Bans.Add(ban);
-            await _context.SaveChangesAsync();
             var result = await _context.SaveChangesAsync();
+            
             if (result > 0)
             {
                 return CreatedAtAction(nameof(GetBanbyId), new { id = ban.MaBan }, model);
@@ -102,10 +103,12 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             {
                 return BadRequest("ID không khớp.");
             }    
+
             var ban = await _context.Bans.FindAsync(id);
-            if (ban == null) return NotFound();
+            if (ban == null) 
+                return NotFound();
             {
-                ban.SoBan = model.Soban;
+                ban.SoBan = model.SoBan;
                 ban.TrangThai = model.TrangThai;
             }
 
@@ -120,7 +123,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBan(int id)
         {
-            var ban = await _context.Bans.FindAsync();
+            var ban = await _context.Bans.FindAsync(id);
             if (ban == null) return NotFound();
 
             _context.Bans.Remove(ban);
