@@ -1,10 +1,12 @@
 ﻿using HTGMTMQ_QR.BackendServer.Data;
-using Microsoft.AspNetCore.Mvc;
 using HTGMTMQ_QR.BackendServer.Data.Entities;
 using HTGMTMQ_QR.ViewModels.Systems.Ban;
-using Microsoft.EntityFrameworkCore;
 using HTGMTMQ_QR.ViewModels.Systems.Common;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using QRCoder;
 using System.Threading.Tasks;
+using QRCode = HTGMTMQ_QR.BackendServer.Data.Entities.QRCode;
 
 
 namespace HTGMTMQ_QR.BackendServer.Controllers
@@ -73,6 +75,26 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             };
             return Ok(model);
         }
+
+        [HttpGet("{id}/qr")]
+        public async Task<IActionResult> GetQRTheoBan(int id)
+        {
+            var qr = await _context.QRCodes.FirstOrDefaultAsync(x => x.MaBan == id);
+
+            if (qr == null)
+            {
+                return NotFound("Bàn này chưa có mã QR.");
+            }
+            return Ok(new
+            {
+                MaQR = qr.MaQR,
+                MaBan = qr.MaBan,
+                NgayTao = qr.NgayTao,
+                QRBase64 = $"data:image/png;base64,{qr.DuongDanQR}"
+            });
+        }
+
+
         //Url: http://locahost:7066/api/ban/{id}
         //Thêm bàn 
         [HttpPost]
@@ -92,6 +114,50 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
                 return CreatedAtAction(nameof(GetBanbyId), new { id = ban.MaBan }, model);
             }
             return BadRequest("Không thể thêm người dùng mới.");
+        }
+
+        [HttpPost("{id}/tao-qr")]
+        public async Task<IActionResult> PostQRCode(int id)
+        {
+            var ban = await _context.Bans.FindAsync(id);
+            if (ban == null)
+                return NotFound("Không tìm thấy bàn.");
+            // URL khách sẽ truy cập 
+            string url = $"https://yourdomain.com/menu/{id}";
+            // Tạo mã QR
+            var qrGenerator = new QRCodeGenerator();
+            var qrData = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.Q);
+            var qrCode = new PngByteQRCode(qrData);
+            byte[] qrBytes = qrCode.GetGraphic(20);
+
+            // Chuyển sang base64 
+            string base64QR = Convert.ToBase64String(qrBytes);
+            //Lưu
+            var qr = await _context.QRCodes.FirstOrDefaultAsync(x => x.MaBan == id);
+            if (qr == null)
+            {
+                qr = new QRCode
+                {
+                    MaBan = id,
+                    DuongDanQR = base64QR,  
+                    NgayTao = DateTime.Now
+                };
+                _context.QRCodes.Add(qr);
+            }
+            else
+            {
+                qr.DuongDanQR = base64QR;
+                qr.NgayTao = DateTime.Now;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Tạo / cập nhật QR thành công.",
+                url = url,
+                qrBase64 = $"data:image/png;base64,{base64QR}"
+            });
         }
 
         //Url: http://locahost:7066/api/ban/{id}
