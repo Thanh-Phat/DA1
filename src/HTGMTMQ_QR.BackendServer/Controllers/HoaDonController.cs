@@ -152,6 +152,45 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             return BadRequest("Không thể tạo hóa đơn.");
         }
 
+        // PUT: api/hoadon/{id}
+        // Cập nhật thông tin hóa đơn
+        [HttpPut("{id}")]
+        public async Task<ActionResult<HoaDonViewModels>> PutHD(int id, HoaDonUpdateVm model)
+        {
+            if (id != model.MaHD)
+                return BadRequest("ID không khớp.");
+
+            var hd = await _context.HoaDons.FindAsync(id);
+            if (hd == null)
+                return NotFound("Không tìm thấy hóa đơn.");
+
+            // Nếu đổi bàn → cập nhật trạng thái 2 bàn
+            if (hd.MaBan != model.MaBan)
+            {
+                // Bàn cũ → Trống
+                var banCu = await _context.Bans.FindAsync(hd.MaBan);
+                if (banCu != null)
+                    banCu.TrangThai = "Trống";
+
+                // Bàn mới → Đang phục vụ
+                var banMoi = await _context.Bans.FindAsync(model.MaBan);
+                if (banMoi != null)
+                    banMoi.TrangThai = "Đang phục vụ";
+            }
+
+            // Cập nhật dữ liệu hóa đơn
+            hd.MaBan = model.MaBan;
+            hd.MaND = model.MaND;
+            hd.TrangThai = model.TrangThai;
+            hd.LastModifiedDate = DateTime.Now;
+
+            // Không cho sửa tổng tiền — auto tính
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Cập nhật hóa đơn thành công." });
+        }
+
+
         //Delete: api/hoadon/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteHD(int id)

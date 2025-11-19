@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HTGMTMQ_QR.ViewModels.Systems.HoaDon
 {
-    internal class HoaDonUpdateVm
+    public class HoaDonUpdateVm
     {
         public int MaHD { get; set; }
         public int MaBan { get; set; }

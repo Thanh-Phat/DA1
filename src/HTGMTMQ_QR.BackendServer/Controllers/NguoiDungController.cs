@@ -19,30 +19,6 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         {
             _context = context;
         }
-
-        //URL POST: http://locahost:5001/api/nguoidung
-        //Thêm người dùng
-        [HttpPost]
-        public async Task<ActionResult<NguoiDungViewModels>>PostNguoiDung(NguoiDungCreateVm model)
-        {
-            var nd = new NguoiDung
-            {
-                TenDangNhap = model.TenDangNhap,
-                MatKhau = PasswordHelper.HashPassword(model.MatKhau),
-                HoTen = model.HoTen,
-                VaiTro = model.VaiTro,
-                TrangThai = true,
-                NgayCapNhatMK = DateTime.Now,
-            };
-            _context.NguoiDungs.Add(nd);
-            var result = await _context.SaveChangesAsync();
-            if (result > 0) 
-            {
-                return CreatedAtAction(nameof(GetNguoiDungbyId), new { id = nd.MaND }, model);
-            }
-            return BadRequest("Không thể thêm người dùng mới.");
-        }
-
         // URL GET: http://localhost:5001/api/nguoidung/?filter={searchKeyword}&pageIndex=1&pageSize=10
         // Lấy danh sách (có filter + paging)
         [HttpGet]
@@ -101,6 +77,28 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
                 TrangThai = user.TrangThai,
             };
             return Ok(model);
+        }
+        //URL POST: http://locahost:5001/api/nguoidung
+        //Thêm người dùng
+        [HttpPost]
+        public async Task<ActionResult<NguoiDungViewModels>> PostNguoiDung(NguoiDungCreateVm model)
+        {
+            var nd = new NguoiDung
+            {
+                TenDangNhap = model.TenDangNhap,
+                MatKhau = PasswordHelper.HashPassword(model.MatKhau),
+                HoTen = model.HoTen,
+                VaiTro = model.VaiTro,
+                TrangThai = true,
+                NgayCapNhatMK = DateTime.Now,
+            };
+            _context.NguoiDungs.Add(nd);
+            var result = await _context.SaveChangesAsync();
+            if (result > 0)
+            {
+                return CreatedAtAction(nameof(GetNguoiDungbyId), new { id = nd.MaND }, model);
+            }
+            return BadRequest("Không thể thêm người dùng mới.");
         }
 
         //URL Put: http://locahost:5001/api/nguoidung/{id}
