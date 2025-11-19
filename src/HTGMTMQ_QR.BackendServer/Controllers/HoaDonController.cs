@@ -2,16 +2,19 @@
 using HTGMTMQ_QR.BackendServer.Data.Entities;
 using HTGMTMQ_QR.ViewModels.Systems.Common;
 using HTGMTMQ_QR.ViewModels.Systems.HoaDon;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace HTGMTMQ_QR.BackendServer.Controllers
 {
-    public class HoaDonController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class HoaDonController : ControllerBase
     {
         private readonly ApplicationDbcontext _context;
 
-       public HoaDonController(ApplicationDbcontext context)
+        public HoaDonController(ApplicationDbcontext context)
         {
             _context = context;
         }
@@ -29,7 +32,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
             var items = await query
                 .OrderBy(hd => hd.MaHD)
-                .Skip((pageIndex - 1) * pageSize)
+                .Skip((pageSize - 1) * pageSize)
                 .Take(pageSize)
                 .Select(hd => new HoaDonViewModels
                 {
@@ -59,17 +62,61 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         {
             var hd = await _context.HoaDons.FindAsync(id);
 
-            if (hd ==null)
-                    return NotFound();
+            if (hd == null)
+                return NotFound();
             var model = new HoaDonViewModels
             {
-                MaHD =  hd.MaND,
+                MaHD = hd.MaHD,
                 MaBan = hd.MaBan,
                 MaND = hd.MaND,
-                NgayTao= hd.NgayTao,
+                NgayTao = hd.NgayTao,
                 TongTien = hd.TongTien,
                 TrangThai = hd.TrangThai,
             };
+            return Ok(model);
+        }
+        // GET: api/hoadon/TheoNgay?date=2025-01-01
+        [HttpGet("TheoNgay")]
+
+        public async Task<IActionResult> GetHDTheoNgay(DateTime date)
+        {
+            var query = await _context.HoaDons
+            .Where(hd => hd.NgayTao.Date == date.Date)
+            .Select(hd => new HoaDonViewModels
+            {
+                MaHD = hd.MaHD,
+                MaBan = hd.MaBan,
+                MaND = hd.MaND,
+                NgayTao = hd.NgayTao,
+                TongTien = hd.TongTien,
+                TrangThai = hd.TrangThai
+            })
+            .ToListAsync();
+            return Ok(query);
+        }
+
+        // GET: /api/hoadon/dangmo/{maban}
+        [HttpGet("dangmo/{maban}")]
+        public async Task<IActionResult> GetHoaDonDangMoTheoBan(int maban)
+        {
+            var hd = await _context.HoaDons
+                .Where(h => h.MaBan == maban && h.TrangThai == "Chưa thanh toán")
+                .OrderByDescending(h => h.NgayTao)
+                .FirstOrDefaultAsync();
+
+            if (hd == null)
+                return NotFound("Bàn này không có hóa đơn đang mở.");
+
+            var model = new HoaDonViewModels
+            {
+                MaHD = hd.MaHD,
+                MaBan = hd.MaBan,
+                MaND = hd.MaND,
+                NgayTao = hd.NgayTao,
+                TongTien = hd.TongTien,
+                TrangThai = hd.TrangThai
+            };
+
             return Ok(model);
         }
 
@@ -83,18 +130,50 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
                 MaBan = model.MaBan,
                 MaND = model.MaND,
                 NgayTao = DateTime.Now,
-                TongTien= 0,
-                TrangThai = "Chưa Thanh Toán"
+                TongTien = 0,
+                TrangThai = "Chưa thanh toán"
             };
 
             _context.HoaDons.Add(hd);
+            // Cập nhật trạng thái bàn
+
+            var ban = await _context.Bans.FindAsync(model.MaBan);
+            if (ban != null)
+            {
+                ban.TrangThai = "Đang phục vụ";
+            }
+
             var result = await _context.SaveChangesAsync();
 
             if (result > 0)
             {
                 return CreatedAtAction(nameof(GetHDById), new { id = hd.MaHD }, model);
-            }    
+            }
             return BadRequest("Không thể tạo hóa đơn.");
+        }
+
+        //Delete: api/hoadon/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteHD(int id)
+        {
+            var hoadon = await _context.HoaDons.FindAsync(id);
+            if (hoadon == null)
+                return NotFound("Không tìm thấy hóa đơn.");
+            // Không cho xoá hóa đơn đã thanh toán
+            if (hoadon.TrangThai == "Đã thanh toán")
+                return BadRequest("Không thể xóa hóa đơn đã thanh toán.");
+            //Xóa chi tiết hóa đơn liên quan
+            var cthds = _context.ChiTietHoaDons.Where(c => c.MaHD == id);
+            _context.ChiTietHoaDons.RemoveRange(cthds);
+            //Đặt trạng thái bàn về Trống
+            var ban = await _context.Bans.FindAsync(hoadon.MaBan);
+            if (ban != null)
+                ban.TrangThai = "Trống";
+            //Xóa hóa đơn
+            _context.HoaDons.Remove(hoadon);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Đã xóa hóa đơn và giải phóng bàn." });
         }
     }
 }
