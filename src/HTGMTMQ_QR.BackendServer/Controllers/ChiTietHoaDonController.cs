@@ -1,5 +1,6 @@
 ﻿using HTGMTMQ_QR.BackendServer.Data;
 using HTGMTMQ_QR.BackendServer.Data.Entities;
+using HTGMTMQ_QR.BackendServer.Helpers;
 using HTGMTMQ_QR.ViewModels.Systems.Ban;
 using HTGMTMQ_QR.ViewModels.Systems.Chitiethoadon;
 using HTGMTMQ_QR.ViewModels.Systems.Common;
@@ -100,9 +101,11 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
             if (result > 0)
             {
+                await HoaDonService.CapNhatTongTien( _context, model.MaHD);
+                await _context.SaveChangesAsync();
+
                 return CreatedAtAction(nameof(GetCTHDById), new { id = cthd.MaCTHD }, model);
             }
-
             return BadRequest("Không thể thêm chi tiết hóa đơn.");
         }
 
@@ -122,7 +125,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
             _context.Entry(cthd).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-
+            await HoaDonService.CapNhatTongTien(_context, cthd.MaHD);
             return Ok(new { message = "Cập nhật chi tiết hóa đơn thành công." });
         }
 
@@ -133,10 +136,10 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             var cthd = await _context.ChiTietHoaDons.FindAsync(id);
             if (cthd == null)
                 return NotFound();
-
+            int maHD =cthd.MaHD;
             _context.ChiTietHoaDons.Remove(cthd);
             await _context.SaveChangesAsync();
-
+            await HoaDonService.CapNhatTongTien(_context, maHD);
             return Ok(new { message = "Xóa món thành công." });
         }
     }
