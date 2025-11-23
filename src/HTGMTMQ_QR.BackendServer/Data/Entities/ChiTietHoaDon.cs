@@ -18,6 +18,7 @@ namespace HTGMTMQ_QR.BackendServer.Data.Entities
         public int SoLuong { get; set; }
 
         public decimal DonGia { get; set; }
+
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public decimal ThanhTien { get; set; }
 

@@ -30,4 +30,5 @@ namespace HTGMTMQ_QR.BackendServer.Data.Entities
         public DateTime CreateDate { get; set; } = DateTime.Now;
         public DateTime? LastModifiedDate { get; set; }
     }
+
 }
