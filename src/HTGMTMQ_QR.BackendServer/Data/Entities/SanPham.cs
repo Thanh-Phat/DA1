@@ -23,7 +23,7 @@ namespace HTGMTMQ_QR.BackendServer.Data.Entities
         public string TrangThai { get; set; } = "Đang bán";
 
         public ICollection<ChiTietHoaDon> ChiTietHoaDons { get; set; }
-        public DateTime CreateDate { get; set; }
+        public DateTime CreateDate { get; set; } = DateTime.Now;
         public DateTime? LastModifiedDate { get; set; }
     }
 }

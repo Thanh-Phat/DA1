@@ -25,7 +25,7 @@ namespace HTGMTMQ_QR.BackendServer.Data.Entities
 
         public Ban Ban { get; set; }
         public NguoiDung NguoiDung { get; set; }
-        public ThanhToan ThanhToan { get; set; }
+        public ICollection<ThanhToan> ThanhToans { get; set; }
 
         public ICollection<ChiTietHoaDon> ChiTietHoaDons { get; set; }
         public DateTime CreateDate { get ; set ; } = DateTime.Now;

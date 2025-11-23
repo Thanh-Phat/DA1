@@ -120,7 +120,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
                 return BadRequest("ID không khớp.");
 
             var tt = await _context.ThanhToans.FindAsync(id);
-            if (tt != null)
+            if (tt == null)
             {
                 return NotFound("Không tìm thấy thông tin thanh toán.");
             }

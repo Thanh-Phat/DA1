@@ -17,6 +17,9 @@ builder.Services.AddCors(options =>
                         .AllowAnyHeader()
                         .AllowAnyMethod());
 });
+//authentication
+builder.Services.AddAuthentication("Bearer");
+    .AddJwtBearer("bear");
 //Kết nối database
 builder.Services.AddDbContext<ApplicationDbcontext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

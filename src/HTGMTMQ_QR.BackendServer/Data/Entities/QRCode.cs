@@ -18,5 +18,6 @@ namespace HTGMTMQ_QR.BackendServer.Data.Entities
         public DateTime NgayTao { get; set; }
 
         public Ban Ban { get; set; }
+
     }
 }
