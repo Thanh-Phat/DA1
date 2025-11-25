@@ -3,12 +3,14 @@ using HTGMTMQ_QR.BackendServer.Data.Entities;
 using HTGMTMQ_QR.ViewModels.Systems.Chitiethoadon;
 using HTGMTMQ_QR.ViewModels.Systems.Common;
 using HTGMTMQ_QR.ViewModels.Systems.ThanhToan;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace HTGMTMQ_QR.BackendServer.Controllers
 {
+    [Authorize(Roles = "ThuNgan,QuanLy")]
     [Route("api/[controller]")]
     [ApiController]
     public class ThanhToanController : ControllerBase
@@ -74,6 +76,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         }
 
         //POST: tạo thanh toán
+        [Authorize(Roles = "ThuNgan")]
         [HttpPost]
 
         public async Task<IActionResult> PostThanhToan(ThanhToanCreateVm model)
@@ -113,6 +116,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             return BadRequest("Không thể tạo thanh toán.");
         }
         //Put: cập nhật thanh toán
+        [Authorize(Roles = "QuanLy")]
         [HttpPut("{id}")]
         public async Task<ActionResult<ThanhToanViewModels>> PutThanhToan(int id, ThanhToanUpdateVm model)
         {
@@ -135,6 +139,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             return Ok(new {message = " Cập nhật thanh toán thành công."});
         }
 
+        [Authorize(Roles = "QuanLy")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteThanhToan(int id)
         {
@@ -157,7 +162,5 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
             return Ok(new { message = "Đã xóa thanh toán và khôi phục trạng thái hóa đơn/bàn." });
         }
-
-
     }
 }

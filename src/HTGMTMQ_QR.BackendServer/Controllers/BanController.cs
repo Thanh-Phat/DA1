@@ -2,6 +2,7 @@
 using HTGMTMQ_QR.BackendServer.Data.Entities;
 using HTGMTMQ_QR.ViewModels.Systems.Ban;
 using HTGMTMQ_QR.ViewModels.Systems.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QRCoder;
@@ -11,6 +12,7 @@ using QRCode = HTGMTMQ_QR.BackendServer.Data.Entities.QRCode;
 
 namespace HTGMTMQ_QR.BackendServer.Controllers
 {
+    [Authorize(Roles = "QuanLy")]
     [Route("api/[controller]")]
     [ApiController]
     public class BanController : ControllerBase
@@ -87,9 +89,9 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             }
             return Ok(new
             {
-                MaQR = qr.MaQR,
-                MaBan = qr.MaBan,
-                NgayTao = qr.NgayTao,
+                qr.MaQR,
+                qr.MaBan,
+                qr.NgayTao,
                 QRBase64 = $"data:image/png;base64,{qr.DuongDanQR}"
             });
         }
@@ -100,6 +102,10 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         [HttpPost]
         public async Task<ActionResult<BanViewModels>> PostBan(BanCreateVm model)
         {
+            // Kiểm tra số bàn trùng
+            if (await _context.Bans.AnyAsync(x => x.SoBan == model.SoBan))
+                return BadRequest("Số bàn này đã tồn tại.");
+
             var ban = new Ban
             {
                 SoBan = model.SoBan,
@@ -122,18 +128,21 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             var ban = await _context.Bans.FindAsync(id);
             if (ban == null)
                 return NotFound("Không tìm thấy bàn.");
+
             // URL khách sẽ truy cập 
             string url = $"https://yourdomain.com/menu/{id}";
+
             // Tạo mã QR
             var qrGenerator = new QRCodeGenerator();
             var qrData = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.Q);
             var qrCode = new PngByteQRCode(qrData);
             byte[] qrBytes = qrCode.GetGraphic(20);
-
             // Chuyển sang base64 
             string base64QR = Convert.ToBase64String(qrBytes);
+
             //Lưu
             var qr = await _context.QRCodes.FirstOrDefaultAsync(x => x.MaBan == id);
+
             if (qr == null)
             {
                 qr = new QRCode
@@ -173,6 +182,10 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             var ban = await _context.Bans.FindAsync(id);
             if (ban == null) 
                 return NotFound();
+            // Kiểm tra số bàn trùng
+            if (await _context.Bans.AnyAsync(x => x.SoBan == model.SoBan && x.MaBan != id))
+                return BadRequest("Số bàn này đã tồn tại.");
+
             {
                 ban.SoBan = model.SoBan;
                 ban.TrangThai = model.TrangThai;
@@ -191,6 +204,12 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         {
             var ban = await _context.Bans.FindAsync(id);
             if (ban == null) return NotFound();
+
+            // Không xóa nếu còn hóa đơn chưa thanh toán
+            bool hasUnpaid = await _context.HoaDons.AnyAsync(h => h.MaBan == id && h.TrangThai == "Chưa thanh toán");
+            if (hasUnpaid)
+                return BadRequest("Không thể xóa bàn này vì còn hóa đơn chưa thanh toán.");
+
 
             _context.Bans.Remove(ban);
             await _context.SaveChangesAsync();

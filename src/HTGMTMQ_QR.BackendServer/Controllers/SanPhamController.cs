@@ -2,12 +2,14 @@
 using HTGMTMQ_QR.BackendServer.Data.Entities;
 using HTGMTMQ_QR.ViewModels.Systems.Common;
 using HTGMTMQ_QR.ViewModels.Systems.SanPham;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace HTGMTMQ_QR.BackendServer.Controllers
 {
+    [Authorize(Roles = "QuanLy")]
     [Route("api/[controller]")]
     [ApiController]
     public class SanPhamController : ControllerBase
@@ -19,6 +21,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         }
 
         // GET ALL + FILTER + PAGING
+        [Authorize(Roles = "QuanLy,ThuNgan")]
         [HttpGet]
         public async Task<IActionResult> GetAllSanPham(string? filter = null, int pageIndex = 1, int pageSize = 10)
         {
@@ -55,6 +58,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         }
 
         // GET BY ID
+        [Authorize(Roles = "QuanLy,ThuNgan")]
         [HttpGet("{id}")]
         public async Task<ActionResult<SanPhamViewModels>> GetSanPhamById(int id)
         {
@@ -72,6 +76,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             });
         }
         // POST - Tạo món
+        [Authorize(Roles = "QuanLy")]
         [HttpPost]
         public async Task<ActionResult<SanPhamViewModels>> PostSanPham(SanPhamCreateVm model)
         {
@@ -93,6 +98,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         }
 
         // PUT - Cập nhật món
+        [Authorize(Roles = "QuanLy")]
         [HttpPut("{id}")]
         public async Task<ActionResult<SanPhamViewModels>> PutSanPham(int id, SanPhamUpdateVm model)
         {
@@ -114,6 +120,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         }
 
         // DELETE - Xóa món
+        [Authorize(Roles = "QuanLy")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

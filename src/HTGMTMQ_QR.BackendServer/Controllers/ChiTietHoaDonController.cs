@@ -4,12 +4,14 @@ using HTGMTMQ_QR.BackendServer.Helpers;
 using HTGMTMQ_QR.ViewModels.Systems.Ban;
 using HTGMTMQ_QR.ViewModels.Systems.Chitiethoadon;
 using HTGMTMQ_QR.ViewModels.Systems.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace HTGMTMQ_QR.BackendServer.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class ChiTietHoaDonController : ControllerBase
@@ -22,6 +24,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         }
 
         // GET ALL CTHD theo MaHD
+        [Authorize(Roles = "QuanLy")]
         [HttpGet]
         public async Task<IActionResult> GetAllChiTietHoaDon(string? filter = null, int pageIndex = 1, int pageSize = 20)
         {
@@ -61,7 +64,8 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
 
         }
-
+        // THU NGÂN xem chi tiết
+        [Authorize(Roles = "ThuNgan,QuanLy")]
         [HttpGet("{id}")]
         public async Task<ActionResult<ChiTietHoaDonViewModels>> GetCTHDById(int id)
         {
@@ -84,6 +88,8 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         }
 
         // POST: Thêm món vào hóa đơn
+        // KHÁCH GỌI MÓN (không cần đăng nhập)
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult<ChiTietHoaDonViewModels>> PostCTHD(ChiTietHoaDonCreateVm model)
         {
@@ -110,7 +116,9 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         }
 
         // PUT: Cập nhật món
-        [HttpPut("{id}")]
+        // BẾP cập nhật trạng thái món
+        [Authorize(Roles = "Bep")]
+        [HttpPut("{id}/capnhat-trangthai")]
         public async Task<IActionResult> PutCTHD(int id, ChiTietHoaDonUpdataVm model)
         {
             if (id != model.MaCTHD)
@@ -130,6 +138,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         }
 
         // DELETE: Xóa món
+        [Authorize(Roles = "QuanLy")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCTHD(int id)
         {

@@ -2,12 +2,14 @@
 using HTGMTMQ_QR.BackendServer.Data.Entities;
 using HTGMTMQ_QR.ViewModels.Systems.Common;
 using HTGMTMQ_QR.ViewModels.Systems.HoaDon;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace HTGMTMQ_QR.BackendServer.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class HoaDonController : ControllerBase
@@ -18,6 +20,8 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         {
             _context = context;
         }
+        
+        [Authorize(Roles = "ThuNgan,QuanLy")]
         [HttpGet]
         public async Task<IActionResult> GetAllHoaDon(string? filter = null, int pageIndex = 1, int pageSize = 2)
         {
@@ -55,9 +59,8 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             return Ok(pagination);
         }
 
-
+        [Authorize(Roles = "ThuNgan,QuanLy")]
         [HttpGet("{id}")]
-
         public async Task<ActionResult<HoaDonViewModels>> GetHDById(int id)
         {
             var hd = await _context.HoaDons.FindAsync(id);
@@ -76,8 +79,8 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             return Ok(model);
         }
         // GET: api/hoadon/TheoNgay?date=2025-01-01
+        [Authorize(Roles = "ThuNgan,QuanLy")]
         [HttpGet("TheoNgay")]
-
         public async Task<IActionResult> GetHDTheoNgay(DateTime date)
         {
             var query = await _context.HoaDons
@@ -96,6 +99,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         }
 
         // GET: /api/hoadon/dangmo/{maban}
+        [Authorize(Roles = "ThuNgan,Bep,QuanLy")]
         [HttpGet("dangmo/{maban}")]
         public async Task<IActionResult> GetHoaDonDangMoTheoBan(int maban)
         {
@@ -121,7 +125,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         }
 
         //Post = Thêm hóa đơn
-
+        [Authorize(Roles = "ThuNgan,QuanLy")]
         [HttpPost]
         public async Task<ActionResult<HoaDonViewModels>> PostHD(HoaDonCreateVm model)
         {
@@ -154,6 +158,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
         // PUT: api/hoadon/{id}
         // Cập nhật thông tin hóa đơn
+        [Authorize(Roles = "QuanLy")]
         [HttpPut("{id}")]
         public async Task<ActionResult<HoaDonViewModels>> PutHD(int id, HoaDonUpdateVm model)
         {
@@ -192,6 +197,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
 
         //Delete: api/hoadon/{id}
+        [Authorize(Roles = "QuanLy")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteHD(int id)
         {

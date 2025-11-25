@@ -3,6 +3,7 @@ using HTGMTMQ_QR.BackendServer.Data.Entities;
 using HTGMTMQ_QR.BackendServer.Helpers;
 using HTGMTMQ_QR.ViewModels.Systems.Common;
 using HTGMTMQ_QR.ViewModels.Systems.NguoiDung;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace HTGMTMQ_QR.BackendServer.Controllers
 {
+    [Authorize(Roles = "QuanLy")]
     [Route("api/[controller]")]
     [ApiController]
     public class NguoiDungController : ControllerBase

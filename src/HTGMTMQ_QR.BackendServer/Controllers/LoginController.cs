@@ -1,5 +1,6 @@
 ﻿using HTGMTMQ_QR.BackendServer.Data;
 using HTGMTMQ_QR.BackendServer.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ using System.Text;
 
 namespace HTGMTMQ_QR.BackendServer.Controllers
 {
+    [AllowAnonymous]
     [Route("api/[controller]")]
     [ApiController]
     public class LoginController : ControllerBase
@@ -53,7 +55,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.TenDangNhap),
-                new Claim("role", user.VaiTro),
+                new Claim(ClaimTypes.Role, user.VaiTro),
                 new Claim("id", user.MaND.ToString())
             };
 
