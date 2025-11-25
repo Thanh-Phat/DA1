@@ -128,6 +128,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             if (cthd == null)
                 return NotFound();
 
+            cthd.MaHD = model.maHd
             cthd.SoLuong = model.SoLuong;
             cthd.TrangThaiMon = model.TrangThaiMon;
 

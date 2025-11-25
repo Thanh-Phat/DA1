@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HTGMTMQ_QR.BackendServer.Controllers
 {
-    [Authorize(Roles = "ThuNgan,QuanLy")]
+    [AllowAnonymous]
     [Route("api/[controller]")]
     [ApiController]
     public class ThanhToanController : ControllerBase
