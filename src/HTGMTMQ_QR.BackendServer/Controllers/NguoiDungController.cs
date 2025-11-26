@@ -98,7 +98,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             var result = await _context.SaveChangesAsync();
             if (result > 0)
             {
-                return CreatedAtAction(nameof(GetNguoiDungbyId), new { id = nd.MaND }, model);
+                return CreatedAtAction(nameof(GetNguoiDungbyId), new { id = nd.MaND }, new { mesasge = "Thêm người dùng thành công.",  data = model });
             }
             return BadRequest("Không thể thêm người dùng mới.");
         }

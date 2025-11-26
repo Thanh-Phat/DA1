@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HTGMTMQ_QR.BackendServer.Controllers
 {
-    [Authorize(Roles = "QuanLy")]
     [Route("api/[controller]")]
     [ApiController]
     public class SanPhamController : ControllerBase
@@ -92,8 +91,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             var result = await _context.SaveChangesAsync();
 
             if (result > 0)
-                return CreatedAtAction(nameof(GetSanPhamById), new { id = sp.MaSP }, model);
-
+                return CreatedAtAction(nameof(GetSanPhamById), new { id = sp.MaSP }, new { message = "Thêm sản phẩm thành công.", data = model });
             return BadRequest("Không thể thêm sản phẩm.");
         }
 

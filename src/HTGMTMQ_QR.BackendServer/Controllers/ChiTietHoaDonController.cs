@@ -93,6 +93,20 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         [HttpPost]
         public async Task<ActionResult<ChiTietHoaDonViewModels>> PostCTHD(ChiTietHoaDonCreateVm model)
         {
+
+            var hd = await _context.HoaDons.FindAsync(model.MaHD);
+
+            if (hd == null)
+            {
+                return NotFound("Hóa đơn không tồn tại.");
+            }
+
+            var sp = await _context.SanPhams.FindAsync(model.MaSP);
+            if (sp == null || sp.TrangThai == "Hết hàng")
+            {
+                return BadRequest("Sản phẩm không hợp lệ.");
+            }
+
             var cthd = new ChiTietHoaDon
             {
                 MaHD = model.MaHD,
@@ -128,7 +142,6 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             if (cthd == null)
                 return NotFound();
 
-            cthd.MaHD = model.MaHD;
             cthd.SoLuong = model.SoLuong;
             cthd.TrangThaiMon = model.TrangThaiMon;
 

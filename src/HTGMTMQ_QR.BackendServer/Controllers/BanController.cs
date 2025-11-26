@@ -12,7 +12,6 @@ using QRCode = HTGMTMQ_QR.BackendServer.Data.Entities.QRCode;
 
 namespace HTGMTMQ_QR.BackendServer.Controllers
 {
-    [Authorize(Roles = "QuanLy")]
     [Route("api/[controller]")]
     [ApiController]
     public class BanController : ControllerBase
@@ -25,7 +24,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
         // URL GET: http://localhost:5001/api/ban/?filter={searchKeyword}&pageIndex=1&pageSize=10
         // Lấy danh sách (có filter + paging)
-
+        [Authorize(Roles = "QuanLy,ThuNgan")]
         [HttpGet]
         public async Task<IActionResult> GetAllBan(string? filter = null, int pageIndex = 1, int pageSize = 10)
         {
@@ -61,6 +60,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
         //URL Get: http://locahost:5001/api/ban/{id}
         //Lấy người dùng theo ID
+        [Authorize(Roles = "QuanLy,ThuNgan")]
         [HttpGet("{id}")]
         public async Task<ActionResult<BanViewModels>> GetBanbyId(int id)
         {
@@ -78,6 +78,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             return Ok(model);
         }
 
+        [Authorize(Roles = "QuanLy,ThuNgan")]
         [HttpGet("{id}/qr")]
         public async Task<IActionResult> GetQRTheoBan(int id)
         {
@@ -99,6 +100,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
         //Url: http://locahost:7066/api/ban/{id}
         //Thêm bàn 
+        [Authorize(Roles = "QuanLy")]
         [HttpPost]
         public async Task<ActionResult<BanViewModels>> PostBan(BanCreateVm model)
         {
@@ -122,6 +124,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             return BadRequest("Không thể thêm người dùng mới.");
         }
 
+        [Authorize(Roles = "QuanLy")]
         [HttpPost("{id}/tao-qr")]
         public async Task<IActionResult> PostQRCode(int id)
         {
@@ -171,6 +174,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
         //Url: http://locahost:7066/api/ban/{id}
         //Cập nhật thông tin bàn
+        [Authorize(Roles = "QuanLy")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutBan(int id,BanUpdateVm model)
         {
@@ -199,6 +203,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
         //Url: http://locahost:7066/api/ban/{id}
         //Xóa bàn
+        [Authorize(Roles = "QuanLy")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBan(int id)
         {

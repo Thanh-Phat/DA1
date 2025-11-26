@@ -10,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HTGMTMQ_QR.BackendServer.Controllers
 {
-    [AllowAnonymous]
     [Route("api/[controller]")]
     [ApiController]
     public class ThanhToanController : ControllerBase
@@ -20,7 +19,9 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         {
             _context = context;
         }
-        // GET: danh sách thanh toán
+
+        // GETALL: danh sách thanh toán
+        [Authorize(Roles = "QuanLy,ThuNgan")]
         [HttpGet]
         public async Task<IActionResult> GetAllThanhToan(string? filter = null, int pageIndex = 1, int pageSize = 20)
         {
@@ -63,7 +64,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             var tt = await _context.ThanhToans.FindAsync(id);
 
             if (tt == null)
-                return NotFound();
+                return NotFound("Không tìm thấy thông tin thanh toán.");
 
             return Ok(new ThanhToanViewModels
             {
@@ -75,6 +76,40 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             });
         }
 
+        // GET: Lấy thông tin hóa đơn + chi tiết món trước khi thanh toán
+        [Authorize(Roles = "ThuNgan,QuanLy")]
+        [HttpGet("hoadon/{maHD}")]
+        public async Task<IActionResult> GetHoaDonChiTiet(int maHD)
+        {
+            var hoaDon = await _context.HoaDons
+                .Include(hd => hd.ChiTietHoaDons)
+                .ThenInclude(ct => ct.SanPham)
+                .FirstOrDefaultAsync(hd => hd.MaHD == maHD);
+
+            if (hoaDon == null)
+                return NotFound("Không tìm thấy hóa đơn.");
+
+            return Ok(new
+            {
+                hoaDon.MaHD,
+                hoaDon.MaBan,
+                hoaDon.NgayTao,
+                hoaDon.TongTien,
+                hoaDon.TrangThai,
+                ChiTiet = hoaDon.ChiTietHoaDons.Select(ct => new
+                {
+                    ct.MaCTHD,
+                    ct.MaSP,
+                    TenSP = ct.SanPham.TenSP,
+                    ct.SoLuong,
+                    ct.DonGia,
+                    ct.ThanhTien,
+                    ct.TrangThaiMon
+                })
+            });
+        }
+
+
         //POST: tạo thanh toán
         [Authorize(Roles = "ThuNgan")]
         [HttpPost]
@@ -85,11 +120,16 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
             if (hd == null)
             {
-                return NotFound("Không tìm thấy hóa đơn.");
+                return NotFound(new { message = "Không tìm thấy hóa đơn." });
             }
             if (hd.TrangThai == "Đã thanh toán")
             {
-                return NotFound("Hóa đơn này đã thanh toán rồi.");
+                return BadRequest(new { message = "Hóa đơn đã thanh toán trước đó." });
+            }
+
+            if (model.SoTien < hd.TongTien)
+            {
+                return BadRequest(new { message = "Số tiền thanh toán không hợp lệ." });
             }
 
             var tt = new ThanhToan
@@ -112,7 +152,9 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             var result = await _context.SaveChangesAsync();
 
             if (result > 0)
-                return CreatedAtAction(nameof(GetThanhToanById), new { id = tt.MaTT }, model);
+            {
+                return CreatedAtAction(nameof(GetThanhToanById), new { id = tt.MaTT }, new { message = "Tạo thanh toán thành công", data = model });
+            }
             return BadRequest("Không thể tạo thanh toán.");
         }
         //Put: cập nhật thanh toán
@@ -121,12 +163,12 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         public async Task<ActionResult<ThanhToanViewModels>> PutThanhToan(int id, ThanhToanUpdateVm model)
         {
             if (id != model.MaTT)
-                return BadRequest("ID không khớp.");
+                return BadRequest(new { message = "ID không khớp." });
 
             var tt = await _context.ThanhToans.FindAsync(id);
             if (tt == null)
             {
-                return NotFound("Không tìm thấy thông tin thanh toán.");
+                return NotFound(new { message = "Không tìm thấy thông tin thanh toán." });
             }
 
             tt.HinhThuc = model.HinhThuc;
