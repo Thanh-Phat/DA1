@@ -14,9 +14,9 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
     {
 
         private readonly ApplicationDbcontext _context;
-        public DoanhThuController(ApplicationDbcontext _context)
+        public DoanhThuController(ApplicationDbcontext context)
         {
-            _context = _context;
+            _context = context;
         }
 
         // GET: api/revenue/ngay?date=2025-11-23

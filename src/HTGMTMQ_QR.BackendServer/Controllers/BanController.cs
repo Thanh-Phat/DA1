@@ -133,42 +133,53 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
                 return NotFound("Không tìm thấy bàn.");
 
             // URL khách sẽ truy cập 
-            string url = $"https://yourdomain.com/menu/{id}";
+            string url = $"https://localhost:7266/Ban{id}";
 
             // Tạo mã QR
             var qrGenerator = new QRCodeGenerator();
             var qrData = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.Q);
             var qrCode = new PngByteQRCode(qrData);
             byte[] qrBytes = qrCode.GetGraphic(20);
-            // Chuyển sang base64 
-            string base64QR = Convert.ToBase64String(qrBytes);
+            // ==== LƯU FILE PNG VÀO WWWROOT/QR ====
+            string folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "qr");
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+            string fileName = $"ban_{id}.png";
+            string filePath = Path.Combine(folderPath, fileName);
 
-            //Lưu
+            await System.IO.File.WriteAllBytesAsync(filePath, qrBytes);
+
+            string fileUrl = "/qr/" + fileName; // Để lưu DB
+
+            // ==== LƯU DB ====
             var qr = await _context.QRCodes.FirstOrDefaultAsync(x => x.MaBan == id);
-
             if (qr == null)
             {
                 qr = new QRCode
                 {
                     MaBan = id,
-                    DuongDanQR = base64QR,  
+                    DuongDanQR = fileUrl,  
                     NgayTao = DateTime.Now
                 };
                 _context.QRCodes.Add(qr);
             }
             else
             {
-                qr.DuongDanQR = base64QR;
+                qr.DuongDanQR = fileUrl;
                 qr.NgayTao = DateTime.Now;
             }
 
             await _context.SaveChangesAsync();
 
+            // Trả về base64 để xem trước nếu cần
+            string base64Preview = Convert.ToBase64String(qrBytes);
+
             return Ok(new
             {
                 message = "Tạo / cập nhật QR thành công.",
                 url = url,
-                qrBase64 = $"data:image/png;base64,{base64QR}"
+                qrImage = fileUrl, // ảnh thật để in
+                previewBase64 = $"data:image/png;base64,{base64Preview}"
             });
         }
 
