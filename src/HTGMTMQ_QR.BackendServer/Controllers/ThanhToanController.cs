@@ -171,7 +171,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         //
         //Put: cập nhật thanh toán
         [Authorize(Roles = "QuanLy")]
-        [HttpPut("{id}/cap-nhạt-thanh-toan")]
+        [HttpPut("{id}/cap-nhat-thanh-toan")]
         public async Task<ActionResult<ThanhToanViewModels>> PutThanhToan(int id, ThanhToanUpdateVm model)
         {
             if (id != model.MaTT)
@@ -194,7 +194,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         }
 
         [Authorize(Roles = "QuanLy")]
-        [HttpDelete("{id}//Thanh-Toan")]
+        [HttpDelete("{id}/Thanh-Toan")]
         public async Task<IActionResult> DeleteThanhToan(int id)
         {
             var tt = await _context.ThanhToans.FindAsync(id);
