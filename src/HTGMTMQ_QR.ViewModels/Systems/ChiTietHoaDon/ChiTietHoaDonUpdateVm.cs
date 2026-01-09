@@ -12,5 +12,7 @@ namespace HTGMTMQ_QR.ViewModels.Systems.Chitiethoadon
         public int MaHD { get; set; }
         public int SoLuong { get; set; }
         public string TrangThaiMon { get; set; }
+        public DateTime CreateDate { get; set; } = DateTime.Now;
+        public DateTime? LastModifiedDate { get; set; }
     }
 }

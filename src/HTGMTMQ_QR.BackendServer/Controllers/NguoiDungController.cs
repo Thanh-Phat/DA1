@@ -85,6 +85,10 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         [HttpPost]
         public async Task<ActionResult<NguoiDungViewModels>> PostNguoiDung(NguoiDungCreateVm model)
         {
+            if (await _context.NguoiDungs.AnyAsync(x => x.TenDangNhap == model.TenDangNhap))
+            {
+                return BadRequest("Tên đăng nhập đã tồn tại. Vui lòng chọn tên đăng nhập khác.");
+            }
             var nd = new NguoiDung
             {
                 TenDangNhap = model.TenDangNhap,
@@ -96,9 +100,17 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             };
             _context.NguoiDungs.Add(nd);
             var result = await _context.SaveChangesAsync();
+
             if (result > 0)
             {
-                return CreatedAtAction(nameof(GetNguoiDungbyId), new { id = nd.MaND }, new { mesasge = "Thêm người dùng thành công.",  data = model });
+                return CreatedAtAction(
+                    nameof(GetNguoiDungbyId), 
+                    new { id = nd.MaND }, 
+                    new { 
+                        mesasge = "Thêm người dùng thành công.",  
+                        data = model 
+                    }
+                );
             }
             return BadRequest("Không thể thêm người dùng mới.");
         }

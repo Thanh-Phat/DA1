@@ -34,7 +34,13 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(LoginRequest model)
         {
-            var user = await _context.NguoiDungs
+            // kiểm tra cấu hình JWT
+            var jwtKey = _config["Jwt:Key"];
+            if (string.IsNullOrEmpty(jwtKey))
+            {
+                return StatusCode(500, "JWT Key chưa được cấu hình.");
+            }
+                var user = await _context.NguoiDungs
                 .FirstOrDefaultAsync(x => x.TenDangNhap == model.TenDangNhap);
             if (user == null)
             {
@@ -49,10 +55,8 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
                 return Unauthorized("Tài khoản đang bị khóa");
             }
 
-
-            // tạo JWT Token
-
-            var claims = new[]
+                // tạo JWT Token
+                var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.TenDangNhap),
                 new Claim(ClaimTypes.Role, user.VaiTro),

@@ -14,7 +14,7 @@ namespace HTGMTMQ_QR.BackendServer.Data.Entities
         public int MaBan { get; set; }
 
         [ForeignKey("NguoiDung")]
-        public int MaND { get; set; }
+        public int? MaND { get; set; }
 
         public DateTime NgayTao { get; set; }
 

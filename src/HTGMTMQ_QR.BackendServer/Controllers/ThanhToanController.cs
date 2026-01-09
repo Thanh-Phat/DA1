@@ -112,7 +112,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
         //POST: tạo thanh toán
         [Authorize(Roles = "ThuNgan")]
-        [HttpPost]
+        [HttpPost("{id}/thanh-toan")]
 
         public async Task<IActionResult> PostThanhToan(ThanhToanCreateVm model)
         {
@@ -132,6 +132,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
                 return BadRequest(new { message = "Số tiền thanh toán không hợp lệ." });
             }
 
+            var tienthua = model.SoTien - hd.TongTien;
             var tt = new ThanhToan
             {
                 MaHD = model.MaHD,
@@ -153,13 +154,24 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
             if (result > 0)
             {
-                return CreatedAtAction(nameof(GetThanhToanById), new { id = tt.MaTT }, new { message = "Tạo thanh toán thành công", data = model });
+                return CreatedAtAction(
+                    nameof(GetThanhToanById), 
+                    new { id = tt.MaTT }, 
+                    new
+                    {
+                        message = "Tạo thanh toán thành công",
+                        tongtien = hd.TongTien,
+                        soTienkhachdua = model.SoTien,
+                        tienthua = tienthua       
+                    }
+                 );
             }
             return BadRequest("Không thể tạo thanh toán.");
         }
+        //
         //Put: cập nhật thanh toán
         [Authorize(Roles = "QuanLy")]
-        [HttpPut("{id}")]
+        [HttpPut("{id}/cap-nhạt-thanh-toan")]
         public async Task<ActionResult<ThanhToanViewModels>> PutThanhToan(int id, ThanhToanUpdateVm model)
         {
             if (id != model.MaTT)
@@ -182,7 +194,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         }
 
         [Authorize(Roles = "QuanLy")]
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}//Thanh-Toan")]
         public async Task<IActionResult> DeleteThanhToan(int id)
         {
             var tt = await _context.ThanhToans.FindAsync(id);

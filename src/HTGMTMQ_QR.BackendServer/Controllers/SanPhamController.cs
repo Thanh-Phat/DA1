@@ -79,6 +79,9 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         [HttpPost]
         public async Task<ActionResult<SanPhamViewModels>> PostSanPham(SanPhamCreateVm model)
         {
+            if (await _context.SanPhams.AnyAsync(sp => sp.TenSP == model.TenSP)) 
+                return BadRequest("Sản phẩm đã tồn tại.");
+
             var sp = new SanPham
             {
                 TenSP = model.TenSP,

@@ -17,6 +17,7 @@ namespace HTGMTMQ_QR.BackendServer.Data
           public DbSet<SanPham> SanPhams { get; set; }
           public DbSet<ChiTietHoaDon> ChiTietHoaDons { get; set; }
           public DbSet<ThanhToan> ThanhToans { get; set; }
+          public DbSet<CaLamViec> CaLamViecs { get; set; }
         // 🕒 Tự động cập nhật thời gian sửa đổi
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

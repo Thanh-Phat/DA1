@@ -11,5 +11,7 @@ namespace HTGMTMQ_QR.ViewModels.Systems.NguoiDung
         public int MaND { get; set; }
         public string MatKhauCu { get; set; } = string.Empty;
         public string MatKhauMoi { get; set; } = string.Empty ;
+
+        public string XacNhanMatKhauMoi { get; set ; } = string.Empty ;
     }
 }

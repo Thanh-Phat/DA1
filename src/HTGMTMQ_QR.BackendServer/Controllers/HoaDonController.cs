@@ -21,6 +21,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             _context = context;
         }
         
+        //Lấy toàn bộ danh sách Chitiethoadon 
         [Authorize(Roles = "ThuNgan,QuanLy")]
         [HttpGet]
         public async Task<IActionResult> GetAllHoaDon(string? filter = null, int pageIndex = 1, int pageSize = 2)
@@ -36,13 +37,13 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
             var items = await query
                 .OrderBy(hd => hd.MaHD)
-                .Skip((pageSize - 1) * pageSize)
+                .Skip((pageIndex - 1) * pageSize)
                 .Take(pageSize)
                 .Select(hd => new HoaDonViewModels
                 {
                     MaHD = hd.MaHD,
                     MaBan = hd.MaBan,
-                    MaND = hd.MaND,
+                    MaND = (int)hd.MaND,
                     NgayTao = hd.NgayTao,
                     TongTien = hd.TongTien,
                     TrangThai = hd.TrangThai,
@@ -71,7 +72,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             {
                 MaHD = hd.MaHD,
                 MaBan = hd.MaBan,
-                MaND = hd.MaND,
+                MaND = (int)hd.MaND,
                 NgayTao = hd.NgayTao,
                 TongTien = hd.TongTien,
                 TrangThai = hd.TrangThai,
@@ -89,7 +90,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             {
                 MaHD = hd.MaHD,
                 MaBan = hd.MaBan,
-                MaND = hd.MaND,
+                MaND = (int)hd.MaND,
                 NgayTao = hd.NgayTao,
                 TongTien = hd.TongTien,
                 TrangThai = hd.TrangThai
@@ -115,7 +116,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             {
                 MaHD = hd.MaHD,
                 MaBan = hd.MaBan,
-                MaND = hd.MaND,
+                MaND = (int)hd.MaND,
                 NgayTao = hd.NgayTao,
                 TongTien = hd.TongTien,
                 TrangThai = hd.TrangThai

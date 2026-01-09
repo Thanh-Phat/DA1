@@ -10,7 +10,14 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// 1. Thêm dịch vụ CORS vào Container (Phải trước builder.Build())
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy => policy.AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod());
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -43,41 +50,35 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
-// Cho phép CORS nếu có frontend
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll",
-        policy => policy.AllowAnyOrigin()
-                        .AllowAnyHeader()
-                        .AllowAnyMethod());
-});
-//authentication Jwt
+
+// authentication Jwt
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
-     {
-         options.TokenValidationParameters = new TokenValidationParameters
-         {
-             ValidateIssuer = true,
-             ValidateAudience = true,
-             ValidateLifetime = true,
-             ValidateIssuerSigningKey = true,
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
 
-             ValidIssuer = builder.Configuration["Jwt:Issuer"],
-             ValidAudience = builder.Configuration["Jwt:Audience"],
-             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
-             RoleClaimType = ClaimTypes.Role   // THÊM DÒNG NÀY
-         };
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+               Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+            RoleClaimType = ClaimTypes.Role
+        };
+    });
 
-     });
 builder.Services.AddAuthorization();
-//Kết nối database
+
+// Kết nối database
 builder.Services.AddDbContext<ApplicationDbcontext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// 2. Cấu hình Pipeline (Thứ tự cực kỳ quan trọng)
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -86,11 +87,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// QUAN TRỌNG: UseCors phải nằm sau UseStaticFiles (nếu có) và trước UseAuthentication/UseAuthorization
+app.UseCors("AllowAll");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
-
-

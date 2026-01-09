@@ -77,7 +77,8 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             };
             return Ok(model);
         }
-
+        //URL Get: http://locahost:5001/api/ban/{id}/qr
+        //Lấy ID QR theo bàn
         [Authorize(Roles = "QuanLy,ThuNgan")]
         [HttpGet("{id}/qr")]
         public async Task<IActionResult> GetQRTheoBan(int id)
@@ -93,12 +94,12 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
                 qr.MaQR,
                 qr.MaBan,
                 qr.NgayTao,
-                QRBase64 = $"data:image/png;base64,{qr.DuongDanQR}"
+                qr.DuongDanQR
             });
         }
 
 
-        //Url: http://locahost:7066/api/ban/{id}
+        //Url: http://locahost:7066/api/ban/{id}/them-ban
         //Thêm bàn 
         [Authorize(Roles = "QuanLy")]
         [HttpPost]
@@ -123,25 +124,27 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             }
             return BadRequest("Không thể thêm người dùng mới.");
         }
-
+        //Url: http://locahost:7066/api/ban/{id}/tao-qr
+        //Tạo mã QR cho bàn
         [Authorize(Roles = "QuanLy")]
         [HttpPost("{id}/tao-qr")]
         public async Task<IActionResult> PostQRCode(int id)
         {
             var ban = await _context.Bans.FindAsync(id);
             if (ban == null)
+            {
                 return NotFound("Không tìm thấy bàn.");
-
+            }
             // URL khách sẽ truy cập 
-            string url = $"https://localhost:7266/Ban{id}";
+            string url = $"{Request.Scheme}://{Request.Host}/Ban{id}";
 
             // Tạo mã QR
             var qrGenerator = new QRCodeGenerator();
             var qrData = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.Q);
             var qrCode = new PngByteQRCode(qrData);
             byte[] qrBytes = qrCode.GetGraphic(20);
-            // ==== LƯU FILE PNG VÀO WWWROOT/QR ====
-            string folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "qr");
+            // Lưu ảnh QR vào thư mục anhqr/qr
+            string folderPath = Path.Combine(Directory.GetCurrentDirectory(), "anhqr", "qr");
             if (!Directory.Exists(folderPath))
                 Directory.CreateDirectory(folderPath);
             string fileName = $"ban_{id}.png";
@@ -183,12 +186,13 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             });
         }
 
-        //Url: http://locahost:7066/api/ban/{id}
+        //Url: http://locahost:7066/api/ban/{id}/cap-nhat-ban
         //Cập nhật thông tin bàn
         [Authorize(Roles = "QuanLy")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutBan(int id,BanUpdateVm model)
         {
+            // Kiểm tra ID
             if (id != model.MaBan)
             {
                 return BadRequest("ID không khớp.");
@@ -197,10 +201,15 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             var ban = await _context.Bans.FindAsync(id);
             if (ban == null) 
                 return NotFound();
+            //Không cho đổi trạng thái nếu bàn đang phục vụ
+            bool hasUnpaidHoadon= await _context.HoaDons.AnyAsync(h => h.MaBan == id && h.TrangThai == "Chưa thanh toán");
+            if (hasUnpaidHoadon && model.TrangThai != "Đang phục vụ")
+            {
+                return BadRequest("Không thể thay đổi trạng thái bàn đang phục vụ.");
+            }
             // Kiểm tra số bàn trùng
             if (await _context.Bans.AnyAsync(x => x.SoBan == model.SoBan && x.MaBan != id))
                 return BadRequest("Số bàn này đã tồn tại.");
-
             {
                 ban.SoBan = model.SoBan;
                 ban.TrangThai = model.TrangThai;
@@ -212,24 +221,25 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             return Ok(new { message = "Cập nhật bàn thành công." });
         }
 
-        //Url: http://locahost:7066/api/ban/{id}
+        //Url: http://locahost:7066/api/ban/{id}/xoa-ban
         //Xóa bàn
         [Authorize(Roles = "QuanLy")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBan(int id)
         {
             var ban = await _context.Bans.FindAsync(id);
-            if (ban == null) return NotFound();
-
+            if (ban == null)
+            {
+                return NotFound();
+            }
             // Không xóa nếu còn hóa đơn chưa thanh toán
             bool hasUnpaid = await _context.HoaDons.AnyAsync(h => h.MaBan == id && h.TrangThai == "Chưa thanh toán");
             if (hasUnpaid)
+            {
                 return BadRequest("Không thể xóa bàn này vì còn hóa đơn chưa thanh toán.");
-
-
+            }
             _context.Bans.Remove(ban);
             await _context.SaveChangesAsync();
-
             return Ok(new { message = "Xóa bàn thành công." });
         }
 

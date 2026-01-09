@@ -22,7 +22,7 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         {
             _context = context;
         }
-
+        // URL GET: http://localhost:5001/api/chitiethoadon/?filter={searchKeyword}&pageIndex=1&pageSize=20
         // GET ALL CTHD theo MaHD
         [Authorize(Roles = "QuanLy")]
         [HttpGet]
@@ -64,16 +64,18 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
 
         }
-        // THU NGÂN xem chi tiết
+        // url: http://localhost:5001/api/chitiethoadon/{id}/xem-chi-tiet
+        //xem chi tiết
         [Authorize(Roles = "ThuNgan,QuanLy")]
-        [HttpGet("{id}")]
+        [HttpGet("{id}/xem-chi-tiet-mon")]
         public async Task<ActionResult<ChiTietHoaDonViewModels>> GetCTHDById(int id)
         {
             var cthd = await _context.ChiTietHoaDons.FindAsync(id);
 
             if (cthd == null)
+            {
                 return NotFound();
-
+            }
             var model = new ChiTietHoaDonViewModels
             {
                 MaCTHD = cthd.MaCTHD,
@@ -87,10 +89,11 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             return Ok(model);
         }
 
+        //url: http://localhost:5001/api/chitiethoadon/them-mon
         // POST: Thêm món vào hóa đơn
         // KHÁCH GỌI MÓN (không cần đăng nhập)
         [AllowAnonymous]
-        [HttpPost]
+        [HttpPost("{id}/them-mon")]
         public async Task<ActionResult<ChiTietHoaDonViewModels>> PostCTHD(ChiTietHoaDonCreateVm model)
         {
 
@@ -112,7 +115,8 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
                 MaHD = model.MaHD,
                 MaSP = model.MaSP,
                 SoLuong = model.SoLuong,
-                DonGia = model.DonGia,
+                DonGia = sp.DonGia,
+                ThanhTien = model.SoLuong * sp.DonGia,
                 TrangThaiMon = "Đang nấu"
             };
 
@@ -128,8 +132,8 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             }
             return BadRequest("Không thể thêm chi tiết hóa đơn.");
         }
-
-        // PUT: Cập nhật món
+        // url: http://localhost:5001/api/chitiethoadon/{id}/capnhat-trangthai
+        // PUT: Cập nhật trạng thái món
         // BẾP cập nhật trạng thái món
         [Authorize(Roles = "Bep")]
         [HttpPut("{id}/capnhat-trangthai")]
@@ -140,9 +144,11 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
             var cthd = await _context.ChiTietHoaDons.FindAsync(id);
             if (cthd == null)
-                return NotFound();
-
+            {
+                return NotFound("Không tồn tại");
+            }
             cthd.SoLuong = model.SoLuong;
+            cthd.ThanhTien= model.SoLuong * cthd.DonGia;
             cthd.TrangThaiMon = model.TrangThaiMon;
 
             _context.Entry(cthd).State = EntityState.Modified;
@@ -151,9 +157,11 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
             return Ok(new { message = "Cập nhật chi tiết hóa đơn thành công." });
         }
 
+
+        //url:http://localhost:5001/api/chitiethoadon/{id}/Xoa-mon
         // DELETE: Xóa món
         [Authorize(Roles = "QuanLy")]
-        [HttpDelete("{id}")]
+        [HttpDelete(("{id}/Xoa-mon"))]
         public async Task<IActionResult> DeleteCTHD(int id)
         {
             var cthd = await _context.ChiTietHoaDons.FindAsync(id);
