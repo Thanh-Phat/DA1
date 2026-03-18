@@ -1,8 +1,11 @@
 ﻿using HTGMTMQ_QR.BackendServer.Data;
 using HTGMTMQ_QR.BackendServer.Data.Entities;
+using HTGMTMQ_QR.BackendServer.Data.SeedData;
+using HTGMTMQ_QR.BackendServer.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Security.Claims;
@@ -51,6 +54,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+
 // authentication Jwt
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
@@ -71,13 +75,33 @@ builder.Services.AddAuthentication("Bearer")
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<BanService>();
+builder.Services.AddScoped<HoaDonService>();
+builder.Services.AddScoped<ChiTietHoaDonService>();
+builder.Services.AddScoped<ThanhToanService>();
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://127.0.0.1:5500")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
 // Kết nối database
 builder.Services.AddDbContext<ApplicationDbcontext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
-
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbcontext>();
+    SeedAdmin.Seed(context);
+}
 // 2. Cấu hình Pipeline (Thứ tự cực kỳ quan trọng)
 if (app.Environment.IsDevelopment())
 {
@@ -92,7 +116,8 @@ app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseCors("AllowFrontend");
 app.MapControllers();
 
 app.Run();
+

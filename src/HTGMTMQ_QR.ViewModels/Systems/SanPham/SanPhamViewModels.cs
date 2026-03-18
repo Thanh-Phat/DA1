@@ -11,7 +11,12 @@ namespace HTGMTMQ_QR.ViewModels.Systems.SanPham
         public int MaSP { get; set; }
         public string TenSP { get; set; }
         public decimal DonGia { get; set; }
-        public string LoaiSP { get; set; }
-        public string TrangThai { get; set; }
+        public string? LoaiSP { get; set; }
+        public string? TrangThai { get; set; }
+        public string? ThanhPhan { get; set; }
+
+        public string? MoTa { get; set; }
+
+        public string? HinhAnh { get; set; } = string.Empty;
     }
 }

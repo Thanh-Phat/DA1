@@ -1,5 +1,6 @@
 ﻿using HTGMTMQ_QR.BackendServer.Data;
 using HTGMTMQ_QR.BackendServer.Data.Entities;
+using HTGMTMQ_QR.BackendServer.Service;
 using HTGMTMQ_QR.ViewModels.Systems.Chitiethoadon;
 using HTGMTMQ_QR.ViewModels.Systems.Common;
 using HTGMTMQ_QR.ViewModels.Systems.ThanhToan;
@@ -14,10 +15,10 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
     [ApiController]
     public class ThanhToanController : ControllerBase
     {
-        private readonly ApplicationDbcontext _context;
-        public ThanhToanController(ApplicationDbcontext context)
+        private readonly ThanhToanService _thanhToanService;
+        public ThanhToanController(ThanhToanService thanhToanService)
         {
-            _context = context;
+            _thanhToanService = thanhToanService;
         }
 
         // GETALL: danh sách thanh toán
@@ -25,55 +26,19 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllThanhToan(string? filter = null, int pageIndex = 1, int pageSize = 20)
         {
-            var query = _context.ThanhToans.AsQueryable();
-
-            if (!string.IsNullOrEmpty(filter))
-            {
-                query = query.Where(tt => tt.HinhThuc.Contains(filter));
-            }
-
-            var total = await query.CountAsync();
-
-            var items = await query
-                .OrderBy(tt => tt.MaTT)
-                .Skip((pageIndex - 1) * pageSize)
-                .Take(pageSize)
-                .Select(tt => new ThanhToanViewModels
-                {
-                    MaTT = tt.MaTT,
-                    MaHD = tt.MaHD,
-                    HinhThuc = tt.HinhThuc,
-                    SoTien = tt.SoTien,
-                    NgayTT = tt.NgayTT
-                })
-                .ToListAsync();
-
-            return Ok(new Pagination<ThanhToanViewModels>
-            {
-                Items = items,
-                TotalRecords = total,
-                PageIndex = pageIndex,
-                PageSize = pageSize
-            });
+            var result = await _thanhToanService.GetAllThanhToan(filter, pageIndex, pageSize);
+            return Ok(result);
         }
 
         // GET theo ID
         [HttpGet("{id}")]
         public async Task<ActionResult<ThanhToanViewModels>> GetThanhToanById(int id)
         {
-            var tt = await _context.ThanhToans.FindAsync(id);
-
+            var tt = await _thanhToanService.GetThanhToanById(id);
             if (tt == null)
                 return NotFound("Không tìm thấy thông tin thanh toán.");
+            return Ok(tt);
 
-            return Ok(new ThanhToanViewModels
-            {
-                MaTT = tt.MaTT,
-                MaHD = tt.MaHD,
-                HinhThuc = tt.HinhThuc,
-                SoTien = tt.SoTien,
-                NgayTT = tt.NgayTT
-            });
         }
 
         // GET: Lấy thông tin hóa đơn + chi tiết món trước khi thanh toán
@@ -81,34 +46,11 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         [HttpGet("hoadon/{maHD}")]
         public async Task<IActionResult> GetHoaDonChiTiet(int maHD)
         {
-            var hoaDon = await _context.HoaDons
-                .Include(hd => hd.ChiTietHoaDons)
-                .ThenInclude(ct => ct.SanPham)
-                .FirstOrDefaultAsync(hd => hd.MaHD == maHD);
-
-            if (hoaDon == null)
-                return NotFound("Không tìm thấy hóa đơn.");
-
-            return Ok(new
-            {
-                hoaDon.MaHD,
-                hoaDon.MaBan,
-                hoaDon.NgayTao,
-                hoaDon.TongTien,
-                hoaDon.TrangThai,
-                ChiTiet = hoaDon.ChiTietHoaDons.Select(ct => new
-                {
-                    ct.MaCTHD,
-                    ct.MaSP,
-                    TenSP = ct.SanPham.TenSP,
-                    ct.SoLuong,
-                    ct.DonGia,
-                    ct.ThanhTien,
-                    ct.TrangThaiMon
-                })
-            });
+            var result = await _thanhToanService.GetHoaDonChiTiet(maHD);
+            if (result == null)
+                return NotFound(new { message = "Không tìm thấy hóa đơn hoặc chi tiết hóa đơn." });
+            return Ok(result);
         }
-
 
         //POST: tạo thanh toán
         [Authorize(Roles = "ThuNgan")]
@@ -116,57 +58,11 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
 
         public async Task<IActionResult> PostThanhToan(ThanhToanCreateVm model)
         {
-            var hd = await _context.HoaDons.FindAsync(model.MaHD);
+            var (success, message,data) = await _thanhToanService.PostThanhToan(model);
+            if (!success)
+                return BadRequest(new { message });
+            return Ok(new { message });
 
-            if (hd == null)
-            {
-                return NotFound(new { message = "Không tìm thấy hóa đơn." });
-            }
-            if (hd.TrangThai == "Đã thanh toán")
-            {
-                return BadRequest(new { message = "Hóa đơn đã thanh toán trước đó." });
-            }
-
-            if (model.SoTien < hd.TongTien)
-            {
-                return BadRequest(new { message = "Số tiền thanh toán không hợp lệ." });
-            }
-
-            var tienthua = model.SoTien - hd.TongTien;
-            var tt = new ThanhToan
-            {
-                MaHD = model.MaHD,
-                HinhThuc = model.HinhThuc,
-                SoTien = model.SoTien,
-                NgayTT = DateTime.Now,
-            };
-
-            _context.ThanhToans.Add(tt);
-            //Update trang thái hóa đơn
-            hd.TrangThai = "Đã thanh toán";
-
-            //Update Trạng thái bàn
-            var ban = await _context.Bans.FindAsync(hd.MaBan);
-            if (ban != null)
-                ban.TrangThai = "Trống";
-
-            var result = await _context.SaveChangesAsync();
-
-            if (result > 0)
-            {
-                return CreatedAtAction(
-                    nameof(GetThanhToanById), 
-                    new { id = tt.MaTT }, 
-                    new
-                    {
-                        message = "Tạo thanh toán thành công",
-                        tongtien = hd.TongTien,
-                        soTienkhachdua = model.SoTien,
-                        tienthua = tienthua       
-                    }
-                 );
-            }
-            return BadRequest("Không thể tạo thanh toán.");
         }
         //
         //Put: cập nhật thanh toán
@@ -174,47 +70,21 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         [HttpPut("{id}/cap-nhat-thanh-toan")]
         public async Task<ActionResult<ThanhToanViewModels>> PutThanhToan(int id, ThanhToanUpdateVm model)
         {
-            if (id != model.MaTT)
-                return BadRequest(new { message = "ID không khớp." });
-
-            var tt = await _context.ThanhToans.FindAsync(id);
-            if (tt == null)
-            {
-                return NotFound(new { message = "Không tìm thấy thông tin thanh toán." });
-            }
-
-            tt.HinhThuc = model.HinhThuc;
-            tt.SoTien = model.SoTien;
-            tt.NgayTT = DateTime.Now;
-            
-            _context.Entry(tt).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-
-            return Ok(new {message = " Cập nhật thanh toán thành công."});
+            var result = await _thanhToanService.PutThanhToan(id, model);
+            if (result == null)
+                return NotFound("Không tìm thấy thông tin thanh toán hoặc cập nhật thất bại.");
+            return Ok(new { message = "Cập nhật thanh toán thành công.", data = result });
         }
 
         [Authorize(Roles = "QuanLy")]
         [HttpDelete("{id}/Thanh-Toan")]
         public async Task<IActionResult> DeleteThanhToan(int id)
         {
-            var tt = await _context.ThanhToans.FindAsync(id);
-            if (tt == null)
-                return NotFound("Không tìm thấy thông tin thanh toán.");
-            // Lấy hóa đơn liên quan
-            var hd = await _context.HoaDons.FindAsync(tt.MaHD);
-            if (hd != null)
-            {
-                hd.TrangThai = "Chưa thanh toán";
+            var result = await _thanhToanService.DeleteThanhToan(id);
+            if (!result)
+                return NotFound(new { message = "Không tìm thấy thông tin thanh toán hoặc xóa thất bại." });
+            return Ok(new { message = "Xóa thanh toán thành công." });
 
-                var ban = await _context.Bans.FindAsync(hd.MaBan);
-                if (ban != null)
-                    ban.TrangThai = "Đang phục vụ";
-            }
-
-            _context.ThanhToans.Remove(tt);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Đã xóa thanh toán và khôi phục trạng thái hóa đơn/bàn." });
         }
     }
 }

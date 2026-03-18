@@ -1,11 +1,7 @@
-﻿using HTGMTMQ_QR.BackendServer.Data;
-using HTGMTMQ_QR.BackendServer.Data.Entities;
-using HTGMTMQ_QR.ViewModels.Systems.Common;
+﻿using HTGMTMQ_QR.BackendServer.Service;
 using HTGMTMQ_QR.ViewModels.Systems.SanPham;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace HTGMTMQ_QR.BackendServer.Controllers
 {
@@ -13,133 +9,81 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
     [ApiController]
     public class SanPhamController : ControllerBase
     {
-        private readonly ApplicationDbcontext _context;
-        public SanPhamController(ApplicationDbcontext context) 
+        private readonly SanPhamService _sanPhamService;
+
+        public SanPhamController(SanPhamService sanPhamService)
         {
-            _context = context;
+            _sanPhamService = sanPhamService;
         }
 
-        // GET ALL + FILTER + PAGING
+        // GET ALL
         [Authorize(Roles = "QuanLy,ThuNgan")]
         [HttpGet]
         public async Task<IActionResult> GetAllSanPham(string? filter = null, int pageIndex = 1, int pageSize = 10)
         {
-            var query = _context.SanPhams.AsQueryable();
-
-            if (!string.IsNullOrEmpty(filter))
-            {
-                query = query.Where(sp => sp.TenSP.Contains(filter) || sp.LoaiSP.Contains(filter));
-            }
-
-            var total = await query.CountAsync();
-
-            var items = await query
-                .OrderBy(sp => sp.MaSP)
-                .Skip((pageIndex - 1) * pageSize)
-                .Take(pageSize)
-                .Select(sp => new SanPhamViewModels
-                {
-                    MaSP = sp.MaSP,
-                    TenSP = sp.TenSP,
-                    DonGia = sp.DonGia,
-                    LoaiSP = sp.LoaiSP,
-                    TrangThai = sp.TrangThai
-                })
-                .ToListAsync();
-
-            return Ok(new Pagination<SanPhamViewModels>
-            {
-                Items = items,
-                TotalRecords = total,
-                PageIndex = pageIndex,
-                PageSize = pageSize
-            });
+            var result = await _sanPhamService.GetAllSanPham(filter, pageIndex, pageSize);
+            return Ok(result);
         }
 
         // GET BY ID
         [Authorize(Roles = "QuanLy,ThuNgan")]
         [HttpGet("{id}")]
-        public async Task<ActionResult<SanPhamViewModels>> GetSanPhamById(int id)
+        public async Task<IActionResult> GetSanPhamById(int id)
         {
-            var sp = await _context.SanPhams.FindAsync(id);
-            if (sp == null)
-                return NotFound();
+            var result = await _sanPhamService.GetSanPhamById(id);
 
-            return Ok(new SanPhamViewModels
-            {
-                MaSP = sp.MaSP,
-                TenSP = sp.TenSP,
-                DonGia = sp.DonGia,
-                LoaiSP = sp.LoaiSP,
-                TrangThai = sp.TrangThai
-            });
+            if (result == null)
+                return NotFound("Không tìm thấy sản phẩm.");
+
+            return Ok(result);
         }
-        // POST - Tạo món
+
+        // GET MENU
+        [AllowAnonymous]
+        [HttpGet("menu")]
+        public async Task<IActionResult> GetMenu()
+        {
+            var result = await _sanPhamService.GetMenu();
+            return Ok(result);
+        }
+
+        // POST
         [Authorize(Roles = "QuanLy")]
         [HttpPost]
-        public async Task<ActionResult<SanPhamViewModels>> PostSanPham(SanPhamCreateVm model)
+        public async Task<IActionResult> PostSanPham(SanPhamCreateVm model)
         {
-            if (await _context.SanPhams.AnyAsync(sp => sp.TenSP == model.TenSP)) 
-                return BadRequest("Sản phẩm đã tồn tại.");
+            var (success, message) = await _sanPhamService.PostSanPham(model);
 
-            var sp = new SanPham
-            {
-                TenSP = model.TenSP,
-                DonGia = model.DonGia,
-                LoaiSP = model.LoaiSP,
-                TrangThai = "Đang bán"
-            };
+            if (!success)
+                return BadRequest(new { message });
 
-            _context.SanPhams.Add(sp);
-            var result = await _context.SaveChangesAsync();
-
-            if (result > 0)
-                return CreatedAtAction(nameof(GetSanPhamById), new { id = sp.MaSP }, new { message = "Thêm sản phẩm thành công.", data = model });
-            return BadRequest("Không thể thêm sản phẩm.");
+            return Ok(new { message });
         }
 
-        // PUT - Cập nhật món
+        // PUT
         [Authorize(Roles = "QuanLy")]
         [HttpPut("{id}")]
-        public async Task<ActionResult<SanPhamViewModels>> PutSanPham(int id, SanPhamUpdateVm model)
+        public async Task<IActionResult> PutSanPham(int id, SanPhamUpdateVm model)
         {
-            if (id != model.MaSP)
-                return BadRequest("ID không khớp.");
+            var (success, message) = await _sanPhamService.PutSanPham(id, model);
 
-            var sp = await _context.SanPhams.FindAsync(id);
-            if (sp == null)
-                return NotFound();
+            if (!success)
+                return BadRequest(new { message });
 
-            sp.TenSP = model.TenSP;
-            sp.DonGia = model.DonGia;
-            sp.LoaiSP = model.LoaiSP;
-            sp.TrangThai = model.TrangThai;
-
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Cập nhật sản phẩm thành công." });
+            return Ok(new { message });
         }
 
-        // DELETE - Xóa món
+        // DELETE
         [Authorize(Roles = "QuanLy")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var sp = await _context.SanPhams.FindAsync(id);
+            var (success, message) = await _sanPhamService.Delete(id);
 
-            if (sp == null)
-                return NotFound();
+            if (!success)
+                return BadRequest(new { message });
 
-            // Kiểm tra sản phẩm đã có trong hóa đơn chưa
-            bool isUsed = await _context.ChiTietHoaDons.AnyAsync(c => c.MaSP == id);
-            if (isUsed)
-                return BadRequest("Không thể xóa món đã có trong hóa đơn.");
-
-            _context.SanPhams.Remove(sp);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Xóa sản phẩm thành công." });
+            return Ok(new { message });
         }
-
     }
 }

@@ -1,5 +1,6 @@
 ﻿using HTGMTMQ_QR.BackendServer.Data;
 using HTGMTMQ_QR.BackendServer.Helpers;
+using HTGMTMQ_QR.BackendServer.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,13 +17,10 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
     [ApiController]
     public class LoginController : ControllerBase
     {
-        private readonly ApplicationDbcontext _context;
-        private readonly IConfiguration _config;
-
-        public LoginController(ApplicationDbcontext context, IConfiguration config)
+        private readonly AuthService _authService;
+        public LoginController(AuthService authService)
         {
-            _context = context;
-            _config = config;
+            _authService = authService;
         }
 
         public class LoginRequest
@@ -32,61 +30,14 @@ namespace HTGMTMQ_QR.BackendServer.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginRequest model)
+        public async Task<IActionResult> Login([FromBody] LoginRequest model)
         {
-            // kiểm tra cấu hình JWT
-            var jwtKey = _config["Jwt:Key"];
-            if (string.IsNullOrEmpty(jwtKey))
-            {
-                return StatusCode(500, "JWT Key chưa được cấu hình.");
-            }
-                var user = await _context.NguoiDungs
-                .FirstOrDefaultAsync(x => x.TenDangNhap == model.TenDangNhap);
-            if (user == null)
-            {
-                return Unauthorized("Sai tài khoản.");
-            }
-            if (!PasswordHelper.VerifyPassword(model.MatKhau, user.MatKhau))
-            {
-                return Unauthorized("Sai mật khẩu.");
-            }
-            if (user.TrangThai == false)
-            {
-                return Unauthorized("Tài khoản đang bị khóa");
-            }
+            var (success, message, data) = await _authService.Login(model.TenDangNhap, model.MatKhau);
 
-                // tạo JWT Token
-                var claims = new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, user.TenDangNhap),
-                new Claim(ClaimTypes.Role, user.VaiTro),
-                new Claim("id", user.MaND.ToString())
-            };
+            if (!success)
+                return Unauthorized(new { message });
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddHours(5),
-                signingCredentials: creds
-             );
-            return Ok(new
-            { 
-                message = "Đăng nhập thành công",
-                token = new JwtSecurityTokenHandler().WriteToken(token),
-                user = new
-                {
-                    user.MaND,
-                    user.TenDangNhap,
-                    user.HoTen,
-                    user.VaiTro,
-                } 
-            });
+            return Ok(new { message, data });
         }
-
-
     }
 }

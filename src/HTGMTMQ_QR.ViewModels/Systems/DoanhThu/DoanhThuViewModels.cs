@@ -16,7 +16,7 @@ namespace HTGMTMQ_QR.ViewModels.Systems.DoanhThu
     public class ChiTietHoaDonItem
     {
         public int MaHD { get; set; }
-        public DateTime NgayTT { get; set; }
+        public DateTime? NgayTT { get; set; }
         public decimal SoTien { get; set; }
         public string HinhThuc { get; set; }
     }

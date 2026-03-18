@@ -1,7 +1,11 @@
-﻿namespace HTGMTMQ_QR.BackendServer.Data.Entities
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+
+namespace HTGMTMQ_QR.BackendServer.Data.Entities
 {
     public class CaLamViec
     {
+        [Key]
         public int MaCa { get; set; }
         public int MaND { get; set; }  // Thu ngân
         public DateTime ThoiGianBatDau { get; set; }
