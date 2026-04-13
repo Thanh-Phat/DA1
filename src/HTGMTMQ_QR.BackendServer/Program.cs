@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Security.Claims;
 using System.Text;
+using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,6 +81,7 @@ builder.Services.AddScoped<BanService>();
 builder.Services.AddScoped<HoaDonService>();
 builder.Services.AddScoped<ChiTietHoaDonService>();
 builder.Services.AddScoped<ThanhToanService>();
+builder.Services.AddHttpClient<ChatbotService>();
 
 
 builder.Services.AddCors(options =>
@@ -108,7 +110,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+Env.Load();
 app.UseHttpsRedirection();
 
 // QUAN TRỌNG: UseCors phải nằm sau UseStaticFiles (nếu có) và trước UseAuthentication/UseAuthorization

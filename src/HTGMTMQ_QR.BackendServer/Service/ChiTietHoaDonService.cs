@@ -171,4 +171,3 @@ namespace HTGMTMQ_QR.BackendServer.Service
         }
     }
 }
-}

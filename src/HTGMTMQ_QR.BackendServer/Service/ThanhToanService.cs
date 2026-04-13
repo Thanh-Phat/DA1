@@ -17,7 +17,7 @@ namespace HTGMTMQ_QR.BackendServer.Service
         }
 
         // GETALL: danh sách thanh toán
-        public async Task<Pagination<ThanhToanViewModels> GetAllThanhToan(string? filter = null, int pageIndex = 1, int pageSize = 20)
+        public async Task<Pagination<ThanhToanViewModels>> GetAllThanhToan(string? filter = null, int pageIndex = 1, int pageSize = 20)
         {
             var query = _context.ThanhToans.AsQueryable();
 
@@ -38,7 +38,7 @@ namespace HTGMTMQ_QR.BackendServer.Service
                     MaHD = tt.MaHD,
                     HinhThuc = tt.HinhThuc,
                     SoTien = tt.SoTien,
-                    NgayTT = tt.NgayTT
+                    NgayTT = (DateTime)tt.NgayTT
                 })
                 .ToListAsync();
 
@@ -48,7 +48,7 @@ namespace HTGMTMQ_QR.BackendServer.Service
                 TotalRecords = total,
                 PageIndex = pageIndex,
                 PageSize = pageSize
-            });
+            };
         }
 
         // GET theo ID
@@ -65,7 +65,7 @@ namespace HTGMTMQ_QR.BackendServer.Service
                 MaHD = tt.MaHD,
                 HinhThuc = tt.HinhThuc,
                 SoTien = tt.SoTien,
-                NgayTT = tt.NgayTT
+                NgayTT = (DateTime)tt.NgayTT
             };
         }
 
@@ -99,7 +99,7 @@ namespace HTGMTMQ_QR.BackendServer.Service
                     ct.ThanhTien,
                     ct.TrangThaiMon
                 })
-            });
+            };
         }
 
 

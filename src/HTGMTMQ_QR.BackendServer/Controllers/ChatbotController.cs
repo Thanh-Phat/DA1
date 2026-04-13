@@ -1,26 +1,43 @@
-﻿//using HTGMTMQ_QR.BackendServer.Data;
-//using Microsoft.AspNetCore.Http;
-//using Microsoft.AspNetCore.Mvc;
+﻿using HTGMTMQ_QR.BackendServer.Data;
+using HTGMTMQ_QR.BackendServer.Data.Entities;
+using HTGMTMQ_QR.BackendServer.Service;
+using Microsoft.AspNetCore.Mvc;
 
-//namespace HTGMTMQ_QR.BackendServer.Controllers
-//{
-//    [Route("api/[controller]")]
-//    [ApiController]
-//    [Route("api/chatbot")]
-//    public class ChatbotController : ControllerBase
-//    {
-//        private readonly ApplicationDbcontext _context; 
-//        public ChatbotController(ApplicationDbcontext context)
-//        {
-//            _context = context;
-//        }
+namespace HTGMTMQ_QR.BackendServer.Controllers
+{
+    [ApiController]
+    [Route("api/chatbot")]
+    public class ChatbotController : ControllerBase
+    {
+        private readonly RecommendationService _recommendationService;
+        private readonly ChatbotService _chatbotService;
 
-//        // URL GET: http://localhost:5001/api/chatbot/?message={message}
-//        [HttpPost]
-//        //public async Task<IActionResult> Ask([FromBody] ChatRequest request )
-//        //{
-//        //    string message = request.Message;
-//        //    var query = _context.SanPhams.Where(x => x.TenSP.Contains(message)).ToList();
-//    //    //}
-//    //}
-//}
+        public ChatbotController(RecommendationService recommendationService, ChatbotService chatbotService)
+        {
+            _recommendationService = recommendationService;
+            _chatbotService = chatbotService;
+        }
+
+        [HttpPost("ask")]
+        public async Task<IActionResult> Ask([FromBody] string message)
+        {
+            var intent = await _chatbotService.Analyze(message);
+            Console.WriteLine($"Type: {intent.type}, Price: {intent.price}");
+            var foods = await _recommendationService.Recommend(intent, message);
+
+            var firstFood = foods.FirstOrDefault();
+
+            var messageText = firstFood != null
+                ? $"Bạn có thể thử {firstFood.TenSP} nha 😋"
+                : "Mình chưa tìm được món phù hợp 😢";
+
+            return Ok(new
+            {
+                message = messageText,
+                data = foods
+            });
+        }
+    }
+}
+
+       
